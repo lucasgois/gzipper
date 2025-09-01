@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GZIPPER</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+        body {
+            background-color: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+        }
+        .container {
+            margin-top: 30px;
+            margin-bottom: 30px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .card {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .card-body {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .card-body .row {
+            flex-grow: 1;
+        }
+        .card-body .row > div {
+            display: flex;
+            flex-direction: column;
+        }
+        .card-body .row > div > div {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        textarea {
+
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card shadow-sm">
+            <div class="card-header text-center">
+                <h1>GZIPPER</h1>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Coluna 1: Input Text -->
+                    <div class="col-md-5 d-flex flex-column">
+                        <div class="mb-3 d-flex flex-column flex-grow-1">
+                            <label for="inputText" class="form-label">Texto de Entrada:</label>
+                            <textarea class="form-control flex-grow-1" id="inputText" placeholder="Digite ou cole o texto aqui..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Coluna 2: Opções e Botões -->
+                    <div class="col-md-2">
+                        <div class="d-flex flex-column h-100 justify-content-center align-items-center">
+                            
+
+                            <div class="d-grid gap-2 mb-3 mx-auto" style="max-width: 200px;">
+                                <button class="btn btn-primary" id="encodeBtn" onclick="processAction('encode')">Codificar</button>
+                                <button class="btn btn-secondary" id="decodeBtn" onclick="processAction('decode')">Decodificar</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Coluna 3: Output Text -->
+                    <div class="col-md-5 d-flex flex-column">
+                        <div class="mb-3 d-flex flex-column flex-grow-1">
+                            <label for="outputText" class="form-label">Texto de Saída:</label>
+                            <textarea class="form-control flex-grow-1" id="outputText" readonly></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+
+    <!-- Pako.js for GZIP -->
+    <script src="https://cdn.jsdelivr.net/npm/pako@2.0.4/dist/pako.min.js"></script>
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function uint8ToBase64(uint8Array) {
+            let binaryString = '';
+            uint8Array.forEach(byte => {
+                binaryString += String.fromCharCode(byte);
+            });
+            return btoa(binaryString);
+        }
+
+        function base64ToUint8(base64String) {
+            const binaryString = atob(base64String);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes;
+        }
+
+        function encodeGzip(text) {
+            try {
+                const compressed = pako.gzip(text); // Retorna Uint8Array
+                return uint8ToBase64(compressed);
+            } catch (e) {
+                throw new Error('Erro ao codificar GZIP: ' + e.message);
+            }
+        }
+
+        function decodeGzip(text) {
+            try {
+                const bytes = base64ToUint8(text); // Uint8Array
+                return pako.ungzip(bytes, { to: 'string' });
+            } catch (e) {
+                throw new Error('Erro ao decodificar GZIP: ' + e.message);
+            }
+        }
+
+        function processAction(actionType) {
+            let currentText = document.getElementById('inputText').value;
+            const outputTextarea = document.getElementById('outputText');
+            const encodeBtn = document.getElementById('encodeBtn');
+            const decodeBtn = document.getElementById('decodeBtn');
+
+            outputTextarea.value = ''; 
+            encodeBtn.disabled = true;
+            decodeBtn.disabled = true;
+
+            try {
+                if (actionType === 'encode') {
+                    currentText = encodeGzip(currentText);
+                } else if (actionType === 'decode') {
+                    currentText = decodeGzip(currentText);
+                }
+                outputTextarea.value = currentText;
+            } catch (e) {
+                outputTextarea.value = 'Erro no processamento: ' + e.message;
+            } finally {
+                encodeBtn.disabled = false;
+                decodeBtn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
