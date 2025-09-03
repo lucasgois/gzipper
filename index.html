@@ -5,17 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GZIPPER</title>
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.0.1/css/all.min.css" rel="stylesheet">
     <style>
         html, body {
             height: 100%;
             margin: 0;
+            transition: background-color 0.3s, color 0.3s;
         }
+
         body {
             background-color: #f8f9fa;
             display: flex;
             flex-direction: column;
         }
+
         .container {
             margin-top: 30px;
             margin-bottom: 30px;
@@ -23,139 +28,195 @@
             display: flex;
             flex-direction: column;
         }
+
         .card {
             flex-grow: 1;
             display: flex;
             flex-direction: column;
         }
+
         .card-body {
             flex-grow: 1;
             display: flex;
             flex-direction: column;
         }
+
         .card-body .row {
             flex-grow: 1;
         }
+
         .card-body .row > div {
             display: flex;
             flex-direction: column;
         }
+
         .card-body .row > div > div {
             flex-grow: 1;
             display: flex;
             flex-direction: column;
         }
-        textarea {
 
+        textarea {
+            resize: vertical;
+            min-height: 200px;
         }
+
+        .btn-icon {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .character-count {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="card shadow-sm">
-            <div class="card-header text-center">
-                <h1>GZIPPER</h1>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <!-- Coluna 1: Input Text -->
-                    <div class="col-md-5 d-flex flex-column">
-                        <div class="mb-3 d-flex flex-column flex-grow-1">
-                            <label for="inputText" class="form-label">Texto de Entrada:</label>
-                            <textarea class="form-control flex-grow-1" id="inputText" placeholder="Digite ou cole o texto aqui..."></textarea>
-                        </div>
+<div class="container">
+    <div class="card shadow-sm">
+
+        <div class="card-header text-center">
+            <h1>GZIPPER</h1>
+        </div>
+
+        <div class="card-body">
+            <div class="row">
+
+                <!-- Coluna 1: Input Text -->
+                <div class="col-md-5 d-flex flex-column">
+                    <div class="mb-3 d-flex flex-column flex-grow-1">
+                        <label for="inputText" class="form-label">Texto de Entrada:</label>
+                        <textarea class="form-control flex-grow-1" id="inputText" placeholder="Digite ou cole o texto aqui..."></textarea>
+                        <div class="character-count mt-2" id="charCount">Caracteres: 0</div>
                     </div>
+                </div>
 
-                    <!-- Coluna 2: Opções e Botões -->
-                    <div class="col-md-2">
-                        <div class="d-flex flex-column h-100 justify-content-center align-items-center">
-                            
-
-                            <div class="d-grid gap-2 mb-3 mx-auto" style="max-width: 200px;">
-                                <button class="btn btn-primary" id="encodeBtn" onclick="processAction('encode')">Codificar</button>
-                                <button class="btn btn-secondary" id="decodeBtn" onclick="processAction('decode')">Decodificar</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Coluna 3: Output Text -->
-                    <div class="col-md-5 d-flex flex-column">
-                        <div class="mb-3 d-flex flex-column flex-grow-1">
-                            <label for="outputText" class="form-label">Texto de Saída:</label>
-                            <textarea class="form-control flex-grow-1" id="outputText" readonly></textarea>
+                <!-- Coluna 2: Opções e Botões -->
+                <div class="col-md-2">
+                    <div class="d-flex flex-column h-100 justify-content-center align-items-center">
+                        <div class="d-grid gap-2 mb-3 mx-auto" style="max-width: 200px;">
+                            <button class="btn btn-primary btn-icon" id="encodeBtn">
+                                <i class="fas fa-compress"></i> Codificar
+                            </button>
+                            <button class="btn btn-secondary btn-icon" id="decodeBtn">
+                                <i class="fas fa-expand"></i> Decodificar
+                            </button>
+                            <button class="btn btn-danger btn-icon" id="clearBtn">
+                                <i class="fas fa-trash"></i> Limpar
+                            </button>
+                            <button class="btn btn-dark btn-icon" id="copyBtn">
+                                <i class="fas fa-copy"></i> Copiar
+                            </button>
                         </div>
                     </div>
                 </div>
-                
+
+                <!-- Coluna 3: Output Text -->
+                <div class="col-md-5 d-flex flex-column">
+                    <div class="mb-3 d-flex flex-column flex-grow-1">
+                        <label for="outputText" class="form-label">Texto de Saída:</label>
+                        <textarea class="form-control flex-grow-1" id="outputText" readonly></textarea>
+                    </div>
+                </div>
+
             </div>
         </div>
+
     </div>
+</div>
 
-    <!-- Pako.js for GZIP -->
-    <script src="https://cdn.jsdelivr.net/npm/pako@2.0.4/dist/pako.min.js"></script>
-    <!-- Bootstrap JS Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        function uint8ToBase64(uint8Array) {
-            let binaryString = '';
-            uint8Array.forEach(byte => {
-                binaryString += String.fromCharCode(byte);
-            });
-            return btoa(binaryString);
+<!-- Pako.js for GZIP -->
+<script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
+<!-- Bootstrap JS Bundle with Popper -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js"></script>
+
+<script>
+    const inputText = document.getElementById('inputText');
+    const outputText = document.getElementById('outputText');
+    const encodeBtn = document.getElementById('encodeBtn');
+    const decodeBtn = document.getElementById('decodeBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const copyBtn = document.getElementById('copyBtn');
+    const charCount = document.getElementById('charCount');
+
+    function uint8ToBase64(uint8Array) {
+        return btoa(String.fromCharCode(...uint8Array));
+    }
+
+    function base64ToUint8(base64String) {
+        return Uint8Array.from(atob(base64String), c => c.charCodeAt(0));
+    }
+
+    async function encodeGzip(text) {
+        try {
+            const compressed = pako.gzip(text);
+            return uint8ToBase64(compressed);
+        } catch (e) {
+            throw new Error('Erro ao codificar GZIP: ' + e.message);
+        }
+    }
+
+    async function decodeGzip(text) {
+        try {
+            const bytes = base64ToUint8(text);
+            return pako.ungzip(bytes, {to: 'string'});
+        } catch (e) {
+            throw new Error('Erro ao decodificar GZIP: ' + e.message);
+        }
+    }
+
+    async function processAction(actionType) {
+        const text = inputText.value.trim();
+
+        if (!text) {
+            outputText.value = '⚠️ Por favor, insira um texto para processar.';
+            return;
         }
 
-        function base64ToUint8(base64String) {
-            const binaryString = atob(base64String);
-            const len = binaryString.length;
-            const bytes = new Uint8Array(len);
-            for (let i = 0; i < len; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
+        outputText.value = '';
+        toggleButtons(false);
+
+        try {
+            if (actionType === 'encode') {
+                outputText.value = await encodeGzip(text);
+            } else if (actionType === 'decode') {
+                outputText.value = await decodeGzip(text);
             }
-            return bytes;
+        } catch (e) {
+            outputText.value = 'Erro no processamento: ' + e.message;
+        } finally {
+            toggleButtons(true);
         }
+    }
 
-        function encodeGzip(text) {
-            try {
-                const compressed = pako.gzip(text); // Retorna Uint8Array
-                return uint8ToBase64(compressed);
-            } catch (e) {
-                throw new Error('Erro ao codificar GZIP: ' + e.message);
-            }
-        }
+    function clearText() {
+        inputText.value = '';
+        outputText.value = '';
+        charCount.textContent = 'Caracteres: 0';
+    }
 
-        function decodeGzip(text) {
-            try {
-                const bytes = base64ToUint8(text); // Uint8Array
-                return pako.ungzip(bytes, { to: 'string' });
-            } catch (e) {
-                throw new Error('Erro ao decodificar GZIP: ' + e.message);
-            }
-        }
+    function updateCharCount() {
+        charCount.textContent = `Caracteres: ${inputText.value.length}`;
+    }
 
-        function processAction(actionType) {
-            let currentText = document.getElementById('inputText').value;
-            const outputTextarea = document.getElementById('outputText');
-            const encodeBtn = document.getElementById('encodeBtn');
-            const decodeBtn = document.getElementById('decodeBtn');
+    function toggleButtons(state) {
+        [encodeBtn, decodeBtn, clearBtn].forEach(btn => btn.disabled = !state);
+    }
 
-            outputTextarea.value = ''; 
-            encodeBtn.disabled = true;
-            decodeBtn.disabled = true;
+    function copyText() {
+        navigator.clipboard.writeText(outputText.value);
+        copyBtn.textContent = "Copiado!";
+        setTimeout(() => copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copiar', 1500);
+    }
 
-            try {
-                if (actionType === 'encode') {
-                    currentText = encodeGzip(currentText);
-                } else if (actionType === 'decode') {
-                    currentText = decodeGzip(currentText);
-                }
-                outputTextarea.value = currentText;
-            } catch (e) {
-                outputTextarea.value = 'Erro no processamento: ' + e.message;
-            } finally {
-                encodeBtn.disabled = false;
-                decodeBtn.disabled = false;
-            }
-        }
-    </script>
+    encodeBtn.addEventListener('click', () => processAction('encode'));
+    decodeBtn.addEventListener('click', () => processAction('decode'));
+    clearBtn.addEventListener('click', clearText);
+    copyBtn.addEventListener('click', copyText);
+    inputText.addEventListener('input', updateCharCount);
+</script>
 </body>
 </html>
