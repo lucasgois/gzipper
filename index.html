@@ -3,220 +3,331 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GZIPPER</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome for icons -->
-    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.0.1/css/all.min.css" rel="stylesheet">
+    <title>GZIpper | Compressão de Texto</title>
+    <meta name="description" content="Codifique e decodifique texto usando GZIP com máxima performance e segurança.">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css">
+    
     <style>
-        html, body {
-            height: 100%;
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text: #f8f9fa;
+            --text-muted: #94a3b8;
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
             margin: 0;
-            transition: background-color 0.3s, color 0.3s;
+            padding: 0;
         }
 
         body {
-            background-color: #f8f9fa;
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(168, 85, 247, 0.15) 0px, transparent 50%);
+            color: var(--text);
+            min-height: 100vh;
             display: flex;
-            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
         }
 
         .container {
-            margin-top: 30px;
-            margin-bottom: 30px;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
+            width: 100%;
+            max-width: 1100px;
+            animation: fadeIn 0.8s ease-out;
         }
 
-        .card {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .card-body {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
 
-        .card-body .row {
-            flex-grow: 1;
+        header {
+            text-align: center;
+            margin-bottom: 40px;
         }
 
-        .card-body .row > div {
-            display: flex;
-            flex-direction: column;
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            background: linear-gradient(to right, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
         }
 
-        .card-body .row > div > div {
-            flex-grow: 1;
+        .subtitle {
+            color: var(--text-muted);
+            font-weight: 300;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 180px 1fr;
+            gap: 24px;
+            align-items: stretch;
+        }
+
+        @media (max-width: 992px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            .controls {
+                flex-direction: row !important;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+
+        .editor-group {
             display: flex;
             flex-direction: column;
+            gap: 12px;
+        }
+
+        label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         textarea {
-            resize: vertical;
-            min-height: 200px;
+            width: 100%;
+            height: 350px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 20px;
+            color: #e2e8f0;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: none;
+            transition: all 0.3s ease;
         }
 
-        .btn-icon {
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 16px;
+            min-width: 180px;
+        }
+
+        .loader-container {
+            height: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px 24px;
+            border-radius: 12px;
+            border: none;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-2px); }
+        
+        .btn-secondary { background: rgba(255, 255, 255, 0.05); color: var(--text); border: 1px solid var(--glass-border); }
+        .btn-secondary:hover { background: rgba(255, 255, 255, 0.1); }
+
+        .btn-danger { background: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2); }
+        .btn-danger:hover { background: rgba(239, 68, 68, 0.2); }
+
+        .btn-dark { background: #1e293b; color: white; border: 1px solid var(--glass-border); }
+        .btn-dark:hover { background: #334155; }
+
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .footer-info {
+            margin-top: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .stats-panel {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-around;
+            align-items: center; /* Centralização vertical total */
+            flex-wrap: wrap;
+            gap: 20px;
+            min-height: 80px; /* Espaço reservado ajustado */
+            transition: opacity 0.3s ease;
+        }
+
+        .stats-panel.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .stat-item {
+            text-align: center;
+            min-width: 140px; /* Largura fixa para estabilidade */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .stat-arrow {
             display: flex;
             align-items: center;
-            gap: 5px;
+            justify-content: center;
+            color: var(--text-muted);
+            opacity: 0.5;
+            font-size: 1.2rem;
+            padding-top: 10px; /* Alinhamento visual com os valores */
         }
 
-        .character-count {
-            font-size: 0.9rem;
-            color: #6c757d;
+        .stat-value {
+            display: block;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text);
+            font-family: 'Monaco', monospace; /* Estabilidade numérica */
         }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .loader {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .d-none { display: none !important; }
+        .text-success { color: #4ade80 !important; }
+        .text-warning { color: #fbbf24 !important; }
 
     </style>
 </head>
 <body>
+
 <div class="container">
-    <div class="card shadow-sm">
+    <div class="glass-card">
+        <header>
+            <h1>GZIpper</h1>
+        </header>
 
-        <div class="card-header text-center">
-            <h1>GZIPPER</h1>
-        </div>
-
-        <div class="card-body">
-            <div class="row">
-
-                <!-- Coluna 1: Input Text -->
-                <div class="col-md-5 d-flex flex-column">
-                    <div class="mb-3 d-flex flex-column flex-grow-1">
-                        <label for="inputText" class="form-label">Texto de Entrada:</label>
-                        <textarea class="form-control flex-grow-1" id="inputText" placeholder="Digite ou cole o texto aqui..."></textarea>
-                        <div class="character-count mt-2" id="charCount">Caracteres: 0</div>
-                    </div>
+        <div class="grid">
+            <!-- Entrada -->
+            <div class="editor-group">
+                <label for="inputText">Entrada</label>
+                <textarea id="inputText" placeholder="Insira o texto original ou a string Base64..."></textarea>
+                <div class="footer-info">
+                    <span id="charCount">0 caracteres</span>
+                    <span>UTF-8 Ativo</span>
                 </div>
+            </div>
 
-                <!-- Coluna 2: Opções e Botões -->
-                <div class="col-md-2">
-                    <div class="d-flex flex-column h-100 justify-content-center align-items-center">
-                        <div class="d-grid gap-2 mb-3 mx-auto" style="max-width: 200px;">
-                            <button class="btn btn-primary btn-icon" id="encodeBtn">
-                                <i class="fas fa-compress"></i> Codificar
-                            </button>
-                            <button class="btn btn-secondary btn-icon" id="decodeBtn">
-                                <i class="fas fa-expand"></i> Decodificar
-                            </button>
-                            <button class="btn btn-danger btn-icon" id="clearBtn">
-                                <i class="fas fa-trash"></i> Limpar
-                            </button>
-                            <button class="btn btn-dark btn-icon" id="copyBtn">
-                                <i class="fas fa-copy"></i> Copiar
-                            </button>
-                        </div>
-                    </div>
+            <!-- Controles -->
+            <div class="controls">
+                <button class="btn btn-primary" id="encodeBtn">
+                    <i class="fas fa-compress-alt"></i> Codificar
+                </button>
+                <button class="btn btn-secondary" id="decodeBtn">
+                    <i class="fas fa-expand-alt"></i> Decodificar
+                </button>
+                <div style="height: 1px; background: var(--glass-border); margin: 8px 0;"></div>
+                <button class="btn btn-danger" id="clearBtn">
+                    <i class="fas fa-trash-alt"></i> Limpar
+                </button>
+                <div class="loader-container">
+                    <div id="loader" class="loader d-none"></div>
                 </div>
+            </div>
 
-                <!-- Coluna 3: Output Text -->
-                <div class="col-md-5 d-flex flex-column">
-                    <div class="mb-3 d-flex flex-column flex-grow-1">
-                        <label for="outputText" class="form-label">Texto de Saída:</label>
-                        <textarea class="form-control flex-grow-1" id="outputText" readonly></textarea>
-                    </div>
+            <!-- Saída -->
+            <div class="editor-group">
+                <label for="outputText">Saída</label>
+                <textarea id="outputText" readonly placeholder="O resultado aparecerá aqui..."></textarea>
+                <div class="footer-info">
+                    <button class="btn btn-dark btn-sm" id="copyBtn" style="padding: 6px 12px; font-size: 0.8rem;">
+                        <i class="fas fa-copy"></i> Copiar
+                    </button>
                 </div>
-
             </div>
         </div>
 
+        <!-- Estatísticas -->
+        <div id="statsPanel" class="stats-panel hidden">
+            <div class="stat-item">
+                <span class="stat-label">Original</span>
+                <span class="stat-value" id="originalSize">-</span>
+            </div>
+            <div class="stat-arrow">
+                <i class="fas fa-arrow-right"></i>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Processado</span>
+                <span class="stat-value" id="compressedSize">-</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Eficiência</span>
+                <span class="stat-value" id="ratio">-</span>
+            </div>
+        </div>
     </div>
 </div>
 
-<!-- Pako.js for GZIP -->
-<script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
-<!-- Bootstrap JS Bundle with Popper -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js"></script>
-
-<script>
-    const inputText = document.getElementById('inputText');
-    const outputText = document.getElementById('outputText');
-    const encodeBtn = document.getElementById('encodeBtn');
-    const decodeBtn = document.getElementById('decodeBtn');
-    const clearBtn = document.getElementById('clearBtn');
-    const copyBtn = document.getElementById('copyBtn');
-    const charCount = document.getElementById('charCount');
-
-    function uint8ToBase64(uint8Array) {
-        return btoa(String.fromCharCode(...uint8Array));
-    }
-
-    function base64ToUint8(base64String) {
-        return Uint8Array.from(atob(base64String), c => c.charCodeAt(0));
-    }
-
-    async function encodeGzip(text) {
-        try {
-            const compressed = pako.gzip(text);
-            return uint8ToBase64(compressed);
-        } catch (e) {
-            throw new Error('Erro ao codificar GZIP: ' + e.message);
-        }
-    }
-
-    async function decodeGzip(text) {
-        try {
-            const bytes = base64ToUint8(text);
-            return pako.ungzip(bytes, {to: 'string'});
-        } catch (e) {
-            throw new Error('Erro ao decodificar GZIP: ' + e.message);
-        }
-    }
-
-    async function processAction(actionType) {
-        const text = inputText.value.trim();
-
-        if (!text) {
-            outputText.value = '⚠️ Por favor, insira um texto para processar.';
-            return;
-        }
-
-        outputText.value = '';
-        toggleButtons(false);
-
-        try {
-            if (actionType === 'encode') {
-                outputText.value = await encodeGzip(text);
-            } else if (actionType === 'decode') {
-                outputText.value = await decodeGzip(text);
-            }
-        } catch (e) {
-            outputText.value = 'Erro no processamento: ' + e.message;
-        } finally {
-            toggleButtons(true);
-        }
-    }
-
-    function clearText() {
-        inputText.value = '';
-        outputText.value = '';
-        charCount.textContent = 'Caracteres: 0';
-    }
-
-    function updateCharCount() {
-        charCount.textContent = `Caracteres: ${inputText.value.length}`;
-    }
-
-    function toggleButtons(state) {
-        [encodeBtn, decodeBtn, clearBtn].forEach(btn => btn.disabled = !state);
-    }
-
-    function copyText() {
-        navigator.clipboard.writeText(outputText.value);
-        copyBtn.textContent = "Copiado!";
-        setTimeout(() => copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copiar', 1500);
-    }
-
-    encodeBtn.addEventListener('click', () => processAction('encode'));
-    decodeBtn.addEventListener('click', () => processAction('decode'));
-    clearBtn.addEventListener('click', clearText);
-    copyBtn.addEventListener('click', copyText);
-    inputText.addEventListener('input', updateCharCount);
-</script>
+<script src="index.js"></script>
 </body>
 </html>
