@@ -4,328 +4,401 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GZIpper | Compressão de Texto</title>
-    <meta name="description" content="Codifique e decodifique texto usando GZIP com máxima performance e segurança.">
-    
-    <!-- Google Fonts -->
+    <meta name="description" content="Codifique e decodifique texto usando GZIP + Base64, direto no navegador.">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Stencil+Display:wght@700;900&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
     <style>
         :root {
-            --primary: #6366f1;
-            --primary-hover: #4f46e5;
-            --bg: #0f172a;
-            --card-bg: rgba(30, 41, 59, 0.7);
-            --text: #f8f9fa;
-            --text-muted: #94a3b8;
-            --glass-border: rgba(255, 255, 255, 0.1);
+            --paper: #d9c3a0;
+            --paper-deep: #c9ae84;
+            --sheet: #f3ead8;
+            --ink: #1b1915;
+            --ink-soft: #5a5246;
+            --signal: #ff5a1f;
+            --ok: #1f7a3a;
+            --warn: #b0471b;
+            --shadow: 6px 6px 0 var(--ink);
+            --rule: rgba(27,25,21,.12);
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --paper: #1d1b18;
+                --paper-deep: #26231f;
+                --sheet: #2c2924;
+                --ink: #efe6d2;
+                --ink-soft: #a89f8e;
+                --signal: #ff6a33;
+                --ok: #6fd18a;
+                --warn: #ff9a6a;
+                --rule: rgba(239,230,210,.08);
+            }
         }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: 'Outfit', sans-serif;
-            background-color: var(--bg);
-            background-image: 
-                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
-                radial-gradient(at 100% 0%, rgba(168, 85, 247, 0.15) 0px, transparent 50%);
-            color: var(--text);
+            font-family: 'IBM Plex Mono', ui-monospace, monospace;
+            color: var(--ink);
+            background-color: var(--paper);
+            /* Fibras do papel kraft */
+            background-image:
+                repeating-linear-gradient(90deg, transparent 0 3px, rgba(0,0,0,.025) 3px 4px),
+                repeating-linear-gradient(0deg, transparent 0 7px, rgba(0,0,0,.02) 7px 8px);
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+            padding: 0 0 48px;
         }
 
-        .container {
-            width: 100%;
-            max-width: 1100px;
-            animation: fadeIn 0.8s ease-out;
+        .tape {
+            height: 18px;
+            background: repeating-linear-gradient(-45deg, var(--signal) 0 18px, var(--ink) 18px 36px);
+            border-bottom: 2px solid var(--ink);
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .glass-card {
-            background: var(--card-bg);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            padding: 40px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        .wrap {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 0 16px;
         }
 
         header {
-            text-align: center;
-            margin-bottom: 40px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px 24px;
+            padding: 36px 0 24px;
+            border-bottom: 2px solid var(--ink);
+            margin-bottom: 32px;
         }
 
         h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            letter-spacing: -0.025em;
-            background: linear-gradient(to right, #818cf8, #c084fc);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 8px;
+            font-family: 'Big Shoulders Stencil Display', Impact, sans-serif;
+            font-weight: 900;
+            font-size: clamp(3.5rem, 11vw, 7.5rem);
+            line-height: .82;
+            letter-spacing: .01em;
+            text-transform: uppercase;
         }
 
-        .subtitle {
-            color: var(--text-muted);
-            font-weight: 300;
+        h1 .z { color: var(--signal); }
+
+        .meta {
+            font-size: .75rem;
+            line-height: 1.7;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            text-align: right;
+            color: var(--ink-soft);
         }
+
+        .meta strong { color: var(--ink); }
 
         .grid {
             display: grid;
-            grid-template-columns: 1fr 180px 1fr;
-            gap: 24px;
+            grid-template-columns: 1fr 200px 1fr;
+            gap: 28px;
             align-items: stretch;
         }
 
-        @media (max-width: 992px) {
-            .grid {
-                grid-template-columns: 1fr;
-            }
-            .controls {
-                flex-direction: row !important;
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-        }
-
-        .editor-group {
+        .slip {
+            background: var(--sheet);
+            border: 2px solid var(--ink);
+            box-shadow: var(--shadow);
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            min-width: 0;
         }
 
-        label {
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: var(--text-muted);
+        .slip-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 14px;
+            border-bottom: 2px solid var(--ink);
+            font-size: .75rem;
+            font-weight: 700;
+            letter-spacing: .1em;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+        }
+
+        .slip-head label { cursor: pointer; }
+
+        .slip-head .num {
+            font-family: 'Big Shoulders Stencil Display', Impact, sans-serif;
+            font-size: 1.6rem;
+            line-height: 1;
+            color: var(--signal);
         }
 
         textarea {
+            flex: 1;
             width: 100%;
-            height: 350px;
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            padding: 20px;
-            color: #e2e8f0;
-            font-family: 'Monaco', 'Consolas', monospace;
+            min-height: 340px;
+            border: 0;
+            background:
+                repeating-linear-gradient(transparent 0 25px, var(--rule) 25px 26px);
+            background-position: 0 13px;
+            color: var(--ink);
+            font-family: inherit;
             font-size: 14px;
-            line-height: 1.6;
-            resize: none;
-            transition: all 0.3s ease;
+            line-height: 26px;
+            padding: 13px 16px;
+            resize: vertical;
+            word-break: break-all;
         }
 
-        textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+        textarea::placeholder { color: var(--ink-soft); opacity: .8; }
+        textarea:focus { outline: 3px solid var(--signal); outline-offset: -3px; }
+
+        .slip-foot {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-top: 2px dashed var(--ink);
+            font-size: .75rem;
+            color: var(--ink-soft);
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            min-height: 46px;
         }
 
         .controls {
             display: flex;
             flex-direction: column;
             justify-content: center;
-            gap: 16px;
-            min-width: 180px;
-        }
-
-        .loader-container {
-            height: 24px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            gap: 14px;
         }
 
         .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            padding: 14px 24px;
-            border-radius: 12px;
-            border: none;
-            font-size: 0.95rem;
-            font-weight: 600;
+            font-family: inherit;
+            font-size: .85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            padding: 14px 16px;
+            border: 2px solid var(--ink);
+            background: var(--sheet);
+            color: var(--ink);
+            box-shadow: 4px 4px 0 var(--ink);
             cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-2px); }
-        
-        .btn-secondary { background: rgba(255, 255, 255, 0.05); color: var(--text); border: 1px solid var(--glass-border); }
-        .btn-secondary:hover { background: rgba(255, 255, 255, 0.1); }
-
-        .btn-danger { background: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2); }
-        .btn-danger:hover { background: rgba(239, 68, 68, 0.2); }
-
-        .btn-dark { background: #1e293b; color: white; border: 1px solid var(--glass-border); }
-        .btn-dark:hover { background: #334155; }
-
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-        .footer-info {
-            margin-top: 12px;
+            transition: transform .08s, box-shadow .08s;
+            text-align: left;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 0.8rem;
-            color: var(--text-muted);
+            gap: 10px;
         }
 
+        .btn:hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 var(--ink); }
+        .btn:active { transform: translate(4px, 4px); box-shadow: 0 0 0 var(--ink); }
+        .btn:focus-visible { outline: 3px solid var(--signal); outline-offset: 2px; }
+        .btn:disabled { opacity: .45; cursor: not-allowed; transform: none; box-shadow: 4px 4px 0 var(--ink); }
+
+        .btn-primary { background: var(--signal); color: #1b1915; }
+        .btn-secondary { background: var(--ink); color: var(--sheet); }
+        .btn-danger { background: transparent; border-style: dashed; box-shadow: none; }
+        .btn-danger:hover { box-shadow: none; transform: none; background: var(--paper-deep); }
+        .btn-danger:active { transform: none; }
+
+        .btn-small { padding: 6px 12px; font-size: .72rem; box-shadow: 3px 3px 0 var(--ink); }
+        .btn-dark { background: var(--sheet); }
+        .btn-success { background: var(--ok); color: var(--sheet); }
+        .btn-small.btn-danger { background: var(--warn); color: var(--sheet); border-style: solid; }
+
+        .arrow { font-size: 1.1rem; line-height: 1; }
+
+        .divider {
+            border: 0;
+            border-top: 2px dashed var(--ink);
+            margin: 4px 0;
+        }
+
+        /* Esteira de carregamento */
+        .loader-container { height: 14px; }
+        .loader {
+            height: 14px;
+            border: 2px solid var(--ink);
+            background: repeating-linear-gradient(-45deg, var(--signal) 0 8px, transparent 8px 16px);
+            background-size: 22.6px 22.6px;
+            animation: belt .6s linear infinite;
+        }
+        @keyframes belt { to { background-position: 22.6px 0; } }
+
+        /* Manifesto de estatísticas */
         .stats-panel {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid var(--glass-border);
-            display: flex;
-            justify-content: space-around;
-            align-items: center; /* Centralização vertical total */
-            flex-wrap: wrap;
-            gap: 20px;
-            min-height: 80px; /* Espaço reservado ajustado */
-            transition: opacity 0.3s ease;
+            margin-top: 40px;
+            border: 2px solid var(--ink);
+            background: var(--sheet);
+            box-shadow: var(--shadow);
+            transition: opacity .2s;
         }
 
-        .stats-panel.hidden {
-            opacity: 0;
-            pointer-events: none;
+        .stats-panel.hidden { opacity: .35; }
+        .stats-panel.hidden .bar-fill { width: 0 !important; }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: auto repeat(3, 1fr);
+        }
+
+        .stats-title {
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+            font-family: 'Big Shoulders Stencil Display', Impact, sans-serif;
+            font-weight: 700;
+            font-size: 1.3rem;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            padding: 12px 10px;
+            background: var(--ink);
+            color: var(--sheet);
+            text-align: center;
         }
 
         .stat-item {
-            text-align: center;
-            min-width: 140px; /* Largura fixa para estabilidade */
+            padding: 16px 18px;
+            border-left: 2px solid var(--ink);
             display: flex;
             flex-direction: column;
-            justify-content: center;
-        }
-
-        .stat-arrow {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-muted);
-            opacity: 0.5;
-            font-size: 1.2rem;
-            padding-top: 10px; /* Alinhamento visual com os valores */
-        }
-
-        .stat-value {
-            display: block;
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: var(--text);
-            font-family: 'Monaco', monospace; /* Estabilidade numérica */
+            gap: 6px;
+            min-width: 0;
         }
 
         .stat-label {
-            font-size: 0.75rem;
-            color: var(--text-muted);
+            font-size: .7rem;
             text-transform: uppercase;
+            letter-spacing: .1em;
+            color: var(--ink-soft);
         }
 
-        .loader {
-            display: inline-block;
-            width: 18px;
+        .stat-value {
+            font-family: 'Big Shoulders Stencil Display', Impact, sans-serif;
+            font-weight: 900;
+            font-size: 2rem;
+            line-height: 1;
+        }
+
+        .bar {
             height: 18px;
-            border: 2px solid rgba(255,255,255,.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 0.8s linear infinite;
+            border-top: 2px solid var(--ink);
+            background: repeating-linear-gradient(90deg, transparent 0 9px, var(--rule) 9px 10px);
         }
 
-        @keyframes spin { to { transform: rotate(360deg); } }
+        .bar-fill {
+            height: 100%;
+            width: 0;
+            background: var(--ink);
+            transition: width .5s cubic-bezier(.2,.8,.2,1);
+        }
 
         .d-none { display: none !important; }
-        .text-success { color: #4ade80 !important; }
-        .text-warning { color: #fbbf24 !important; }
+        .text-success { color: var(--ok) !important; }
+        .text-warning { color: var(--warn) !important; }
 
+        footer {
+            margin-top: 28px;
+            font-size: .7rem;
+            text-transform: uppercase;
+            letter-spacing: .1em;
+            color: var(--ink-soft);
+        }
+
+        @media (max-width: 900px) {
+            .grid { grid-template-columns: 1fr; }
+            .controls { flex-direction: row; flex-wrap: wrap; }
+            .controls .btn { flex: 1 1 140px; }
+            .divider { display: none; }
+            .loader-container { flex-basis: 100%; }
+            textarea { min-height: 220px; }
+            .meta { text-align: left; }
+        }
+
+        @media (max-width: 560px) {
+            .stats-row { grid-template-columns: 1fr; }
+            .stats-title { writing-mode: horizontal-tb; transform: none; padding: 8px 14px; text-align: left; }
+            .stat-item { border-left: 0; border-top: 2px solid var(--ink); flex-direction: row; justify-content: space-between; align-items: baseline; }
+            .stat-value { font-size: 1.6rem; }
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="glass-card">
-        <header>
-            <h1>GZIpper</h1>
-        </header>
+<div class="tape" aria-hidden="true"></div>
 
-        <div class="grid">
-            <!-- Entrada -->
-            <div class="editor-group">
+<div class="wrap">
+    <header>
+        <h1>G<span class="z">Z</span>Ipper</h1>
+        <div class="meta">
+            <strong>Compressor de texto</strong><br>
+            GZIP &rarr; Base64 &middot; UTF-8<br>
+            Processado no seu navegador
+        </div>
+    </header>
+
+    <main class="grid">
+        <section class="slip">
+            <div class="slip-head">
                 <label for="inputText">Entrada</label>
-                <textarea id="inputText" placeholder="Insira o texto original ou a string Base64..."></textarea>
-                <div class="footer-info">
-                    <span id="charCount">0 caracteres</span>
-                    <span>UTF-8 Ativo</span>
-                </div>
+                <span class="num">01</span>
             </div>
-
-            <!-- Controles -->
-            <div class="controls">
-                <button class="btn btn-primary" id="encodeBtn">
-                    <i class="fas fa-compress-alt"></i> Codificar
-                </button>
-                <button class="btn btn-secondary" id="decodeBtn">
-                    <i class="fas fa-expand-alt"></i> Decodificar
-                </button>
-                <div style="height: 1px; background: var(--glass-border); margin: 8px 0;"></div>
-                <button class="btn btn-danger" id="clearBtn">
-                    <i class="fas fa-trash-alt"></i> Limpar
-                </button>
-                <div class="loader-container">
-                    <div id="loader" class="loader d-none"></div>
-                </div>
+            <textarea id="inputText" spellcheck="false" placeholder="Cole o texto original ou a string Base64..."></textarea>
+            <div class="slip-foot">
+                <span id="charCount">0 caracteres</span>
+                <span>UTF-8</span>
             </div>
+        </section>
 
-            <!-- Saída -->
-            <div class="editor-group">
-                <label for="outputText">Saída</label>
-                <textarea id="outputText" readonly placeholder="O resultado aparecerá aqui..."></textarea>
-                <div class="footer-info">
-                    <button class="btn btn-dark btn-sm" id="copyBtn" style="padding: 6px 12px; font-size: 0.8rem;">
-                        <i class="fas fa-copy"></i> Copiar
-                    </button>
-                </div>
+        <div class="controls">
+            <button class="btn btn-primary" id="encodeBtn">Codificar <span class="arrow" aria-hidden="true">&rarr;</span></button>
+            <button class="btn btn-secondary" id="decodeBtn">Decodificar <span class="arrow" aria-hidden="true">&larr;</span></button>
+            <hr class="divider">
+            <button class="btn btn-danger" id="clearBtn">Limpar <span class="arrow" aria-hidden="true">&times;</span></button>
+            <div class="loader-container">
+                <div id="loader" class="loader d-none" role="status" aria-label="Processando"></div>
             </div>
         </div>
 
-        <!-- Estatísticas -->
-        <div id="statsPanel" class="stats-panel hidden">
+        <section class="slip">
+            <div class="slip-head">
+                <label for="outputText">Saída</label>
+                <span class="num">02</span>
+            </div>
+            <textarea id="outputText" readonly spellcheck="false" placeholder="O resultado aparece aqui."></textarea>
+            <div class="slip-foot">
+                <span>Somente leitura</span>
+                <button class="btn btn-small btn-dark" id="copyBtn">Copiar</button>
+            </div>
+        </section>
+    </main>
+
+    <section id="statsPanel" class="stats-panel hidden" aria-live="polite">
+        <div class="stats-row">
+            <div class="stats-title">Manifesto</div>
             <div class="stat-item">
                 <span class="stat-label">Original</span>
-                <span class="stat-value" id="originalSize">-</span>
-            </div>
-            <div class="stat-arrow">
-                <i class="fas fa-arrow-right"></i>
+                <span class="stat-value" id="originalSize">&mdash;</span>
             </div>
             <div class="stat-item">
-                <span class="stat-label">Processado</span>
-                <span class="stat-value" id="compressedSize">-</span>
+                <span class="stat-label">Comprimido</span>
+                <span class="stat-value" id="compressedSize">&mdash;</span>
             </div>
             <div class="stat-item">
                 <span class="stat-label">Eficiência</span>
-                <span class="stat-value" id="ratio">-</span>
+                <span class="stat-value" id="ratio">&mdash;</span>
             </div>
         </div>
-    </div>
+        <div class="bar" title="Tamanho comprimido em relação ao original">
+            <div class="bar-fill" id="ratioBar"></div>
+        </div>
+    </section>
+
+    <footer>Nada sai do seu computador &middot; GZIpper</footer>
 </div>
 
 <script src="index.js"></script>

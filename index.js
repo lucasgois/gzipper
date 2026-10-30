@@ -40,7 +40,8 @@ const elements = {
     originalSizeEl: document.getElementById('originalSize'),
     compressedSizeEl: document.getElementById('compressedSize'),
     ratioEl: document.getElementById('ratio'),
-    loader: document.getElementById('loader')
+    loader: document.getElementById('loader'),
+    ratioBar: document.getElementById('ratioBar')
 };
 
 // --- Funções de UI ---
@@ -66,6 +67,10 @@ function updateStats(orig, comp) {
     const ratio = ((1 - (comp / orig)) * 100).toFixed(1);
     elements.ratioEl.textContent = ratio > 0 ? `${ratio}% de economia` : 'Sem economia';
     elements.ratioEl.className = ratio > 0 ? 'stat-value text-success' : 'stat-value text-warning';
+    if (elements.ratioBar) {
+        const fill = orig > 0 ? Math.min(100, (comp / orig) * 100) : 0;
+        elements.ratioBar.style.width = `${fill}%`;
+    }
 }
 
 function showError(msg) {
@@ -132,8 +137,8 @@ elements.copyBtn.addEventListener('click', () => {
     const value = elements.outputText.value;
     if (!value || value.startsWith('❌')) return;
     navigator.clipboard.writeText(value)
-        .then(() => flashCopyBtn('<i class="fas fa-check"></i> Copiado!', 'btn-success'))
-        .catch(() => flashCopyBtn('<i class="fas fa-times"></i> Falhou', 'btn-danger'));
+        .then(() => flashCopyBtn('✓ Copiado', 'btn-success'))
+        .catch(() => flashCopyBtn('✗ Falhou', 'btn-danger'));
 });
 
 elements.inputText.addEventListener('input', () => {
