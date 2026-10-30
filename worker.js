@@ -22,7 +22,8 @@ function uint8ToBase64(uint8) {
  */
 function base64ToUint8(base64) {
     try {
-        const binary = atob(base64);
+        const normalized = base64.replace(/\s+/g, '').replace(/-/g, '+').replace(/_/g, '/');
+        const binary = atob(normalized);
         const len = binary.length;
         const bytes = new Uint8Array(len);
         for (let i = 0; i < len; i++) {
@@ -55,20 +56,21 @@ self.onmessage = function(e) {
         } else if (action === 'decode') {
             const compressedBytes = base64ToUint8(text);
             const decompressed = pako.ungzip(compressedBytes);
-            const decoder = new TextDecoder();
+            const decoder = new TextDecoder('utf-8', { fatal: true });
             const resultText = decoder.decode(decompressed);
             
             self.postMessage({ 
                 success: true, 
                 result: resultText, 
-                originalSize: compressedBytes.length, 
-                compressedSize: decompressed.length 
+                // Mantém "original" como o texto descomprimido para estatísticas coerentes
+                originalSize: decompressed.length,
+                compressedSize: compressedBytes.length
             });
         } else {
             throw new Error("Ação desconhecida: " + action);
         }
     } catch (err) {
-        self.postMessage({ success: false, error: err.message });
+        self.postMessage({ success: false, error: (err && err.message) || String(err) });
     }
 };
 

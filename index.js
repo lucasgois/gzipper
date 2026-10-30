@@ -4,6 +4,7 @@
 
 // --- Gerenciamento do Web Worker ---
 let worker;
+let workerFailed = false;
 
 function initWorker() {
     try {
@@ -14,12 +15,14 @@ function initWorker() {
         
         worker.onerror = function(err) {
             console.error('[GZIpper] Erro crítico no Worker:', err);
+            workerFailed = true;
             showError('Erro ao carregar o processador (worker.js). Verifique se o arquivo existe no servidor.');
             toggleLoading(false);
         };
 
     } catch (e) {
         console.error('[GZIpper] Não foi possível inicializar o Worker:', e);
+        workerFailed = true;
         showError('Seu navegador não suporta Web Workers ou o arquivo não foi encontrado.');
     }
 }
@@ -84,18 +87,23 @@ function handleWorkerMessage(e) {
 }
 
 // --- Event Listeners ---
-elements.encodeBtn.addEventListener('click', () => {
-    const text = elements.inputText.value.trim();
+function runAction(action, text) {
     if (!text) return;
+    if (!worker || workerFailed) {
+        showError('O processador (worker.js) não está disponível. Recarregue a página.');
+        return;
+    }
     toggleLoading(true);
-    worker.postMessage({ action: 'encode', text });
+    worker.postMessage({ action, text });
+}
+
+// Encode preserva o texto exato (sem trim) para garantir ida-e-volta fiel
+elements.encodeBtn.addEventListener('click', () => {
+    runAction('encode', elements.inputText.value);
 });
 
 elements.decodeBtn.addEventListener('click', () => {
-    const text = elements.inputText.value.trim();
-    if (!text) return;
-    toggleLoading(true);
-    worker.postMessage({ action: 'decode', text });
+    runAction('decode', elements.inputText.value.trim());
 });
 
 elements.clearBtn.addEventListener('click', () => {
@@ -105,16 +113,27 @@ elements.clearBtn.addEventListener('click', () => {
     elements.statsPanel.classList.add('hidden');
 });
 
-elements.copyBtn.addEventListener('click', () => {
-    if (!elements.outputText.value || elements.outputText.value.startsWith('❌')) return;
-    navigator.clipboard.writeText(elements.outputText.value);
-    const originalText = elements.copyBtn.innerHTML;
-    elements.copyBtn.innerHTML = '<i class="fas fa-check"></i> Copiado!';
-    elements.copyBtn.classList.replace('btn-dark', 'btn-success');
-    setTimeout(() => {
-        elements.copyBtn.innerHTML = originalText;
-        elements.copyBtn.classList.replace('btn-success', 'btn-dark');
+const copyBtnDefaultHTML = elements.copyBtn.innerHTML;
+let copyResetTimer;
+
+function flashCopyBtn(html, cls) {
+    clearTimeout(copyResetTimer);
+    elements.copyBtn.innerHTML = html;
+    elements.copyBtn.classList.remove('btn-dark', 'btn-success', 'btn-danger');
+    elements.copyBtn.classList.add(cls);
+    copyResetTimer = setTimeout(() => {
+        elements.copyBtn.innerHTML = copyBtnDefaultHTML;
+        elements.copyBtn.classList.remove('btn-success', 'btn-danger');
+        elements.copyBtn.classList.add('btn-dark');
     }, 2000);
+}
+
+elements.copyBtn.addEventListener('click', () => {
+    const value = elements.outputText.value;
+    if (!value || value.startsWith('❌')) return;
+    navigator.clipboard.writeText(value)
+        .then(() => flashCopyBtn('<i class="fas fa-check"></i> Copiado!', 'btn-success'))
+        .catch(() => flashCopyBtn('<i class="fas fa-times"></i> Falhou', 'btn-danger'));
 });
 
 elements.inputText.addEventListener('input', () => {
